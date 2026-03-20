@@ -1,0 +1,69 @@
+[
+  {
+    "username": "ram",
+    "password": "$2b$10$0Rt6GpQbxRYhNgh57bvM2ejLRdJGpSuwYXveYoK.5GOEZ6pxQXPF6",
+    "friends": [
+      "r",
+      "x"
+    ],
+    "requests": []
+  },
+  {
+    "username": "r",
+    "password": "$2b$10$v/GGKoNpUVDev4muB2AE1.I62qbJ6Zz1MFPnrTjvgQsWHFmWUGelG",
+    "friends": [
+      "ram",
+      "charan"
+    ],
+    "requests": []
+  },
+  {
+    "username": "charan",
+    "password": "$2b$10$JNvhbz4ZJdHP4u2.uun5me5QAvoE97ys/12rfZ7xaZqWXILrnBNyG",
+    "friends": [
+      "r"
+    ],
+    "requests": []
+  },
+  {
+    "username": "a",
+    "password": "$2b$10$EuIudXgmpnt8O8OLq.6hm.ljkl9BfHiYNsB9ST6B9Fgiro4AH8SK6",
+    "friends": [
+      "c"
+    ],
+    "requests": []
+  },
+  {
+    "username": "b",
+    "password": "$2b$10$6iSbTHw8K/4EMQpph4OkEe.FkDCPwPPfbxQvr4lgVUwwCTZIGstB2",
+    "friends": [],
+    "requests": []
+  },
+  {
+    "username": "c",
+    "password": "$2b$10$0flKAF10jP/vhA9uwVDtG.hNkDppgCgML3PAx9oMaASp./85uZcfC",
+    "friends": [
+      "c",
+      "c",
+      "a"
+    ],
+    "requests": []
+  },
+  {
+    "username": "x",
+    "password": "$2b$10$sSDHqPCkym35bQ34Bjo2sebNR0a8/V0MQgO/XJur9xrRpgBLBQjvy",
+    "friends": [
+      "y",
+      "ram"
+    ],
+    "requests": []
+  },
+  {
+    "username": "y",
+    "password": "$2b$10$bui0Gy8T2nxPRulT9sw/wezUsbW.k3AKhatj4/ENmC.KwdoluEt4y",
+    "friends": [
+      "x"
+    ],
+    "requests": []
+  }
+]

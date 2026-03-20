@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Charan Chat</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-container">
+        <div class="sidebar">
+            <div class="header-box"><h2>Charan Chat</h2><small id="my-name-display"></small></div>
+            <div class="section"><h3>Find Friends</h3><div id="user-directory"></div></div>
+            <div class="section"><h3>Requests</h3><div id="request-box"></div></div>
+            <div class="section"><h3>Chats</h3><div id="friend-box"></div></div>
+        </div>
+
+        <div class="chat-main">
+            <div class="chat-header">
+                <strong id="chat-title">Select a friend</strong>
+                <button id="clear-chat-btn" onclick="clearEntireChat()" style="display:none; float:right; background:#ff4b4b; color:white; border:none; padding:5px 10px; border-radius:5px; cursor:pointer;">Clear History</button>
+            </div>
+            <div id="message-area" class="message-area"></div>
+            <form id="chat-form" class="input-bar">
+                <label for="file-input" class="icon-btn">📎</label>
+                <input type="file" id="file-input" accept="image/*" style="display:none">
+                <button type="button" class="icon-btn" onclick="openCamera()">📷</button>
+                <input id="input" autocomplete="off" placeholder="Type a message...">
+                <button type="submit" class="send-btn">Send</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="camera-modal">
+        <video id="video" width="320" height="240" autoplay></video>
+        <div class="modal-btns">
+            <button onclick="takePhoto()">Capture</button>
+            <button onclick="closeCamera()" style="background:#ff4b4b;">Cancel</button>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+        let myName = "", activeChat = "", stream;
+
+        async function init() {
+            const res = await fetch('/api/me');
+            if(!res.ok) return window.location.href = '/login';
+            const me = await res.json();
+            myName = me.username;
+            document.getElementById('my-name-display').innerText = "Logged in as: " + myName;
+
+            document.getElementById('request-box').innerHTML = me.requests.map(n => `<div class="item"><span>${n}</span> <button onclick="acceptReq('${n}')">Accept</button></div>`).join('') || '<p class="small">No requests</p>';
+            document.getElementById('friend-box').innerHTML = me.friends.map(f => `<div class="friend-card ${activeChat === f ? 'active' : ''}"><div class="card-content" onclick="openChat('${f}')"><div class="avatar">${f[0]}</div><span>${f}</span></div><button class="del-btn" onclick="deleteFriend('${f}')">×</button></div>`).join('') || '<p class="small">No chats</p>';
+            
+            const dirRes = await fetch('/api/users');
+            const dir = await dirRes.json();
+            document.getElementById('user-directory').innerHTML = dir.map(u => `<div class="item"><span>${u}</span> <button onclick="sendReq('${u}')">Add</button></div>`).join('') || '<p class="small">No new users</p>';
+        }
+
+        function openChat(f) {
+            activeChat = f;
+            document.getElementById('chat-title').innerText = "Chatting with: " + f;
+            document.getElementById('clear-chat-btn').style.display = 'block';
+            socket.emit('join room', { roomID: [myName, f].sort().join('_') });
+            loadHistory();
+            init();
+        }
+
+        async function loadHistory() {
+            if(!activeChat) return;
+            const res = await fetch('/api/messages');
+            const history = await res.json();
+            const roomID = [myName, activeChat].sort().join('_');
+            document.getElementById('message-area').innerHTML = '';
+            history.filter(m => m.room === roomID).forEach(addMsg);
+        }
+
+        function addMsg(msg) {
+            const div = document.createElement('div');
+            div.className = `bubble ${msg.from === myName ? 'sent' : 'received'}`;
+            let content = "";
+            if(msg.image) {
+                content += `<div class="img-container"><img src="${msg.image}" class="chat-img"><a href="${msg.image}" download="charan_chat_${Date.now()}.png" class="download-link">Download</a></div>`;
+            }
+            content += `<div>${msg.text}</div><span class="time">${msg.time}</span>`;
+            if(msg.from === myName) content += `<span class="msg-del" onclick="deleteMsg('${msg.id}')">delete</span>`;
+            div.innerHTML = content;
+            const area = document.getElementById('message-area');
+            area.appendChild(div);
+            area.scrollTop = area.scrollHeight;
+        }
+
+        async function clearEntireChat() {
+            if(confirm("Wipe this entire chat history?")) {
+                const roomID = [myName, activeChat].sort().join('_');
+                await fetch('/api/delete-entire-chat', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ roomID }) });
+                loadHistory();
+            }
+        }
+
+        async function deleteMsg(msgId) {
+            if(confirm("Delete message?")) {
+                await fetch('/api/delete-message', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ msgId }) });
+                loadHistory();
+            }
+        }
+
+        async function deleteFriend(f) {
+            if(confirm(`Unfriend ${f}?`)) {
+                await fetch('/api/delete-friend', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ friendName: f }) });
+                if(activeChat === f) activeChat = "";
+                init();
+            }
+        }
+
+        document.getElementById('file-input').onchange = (e) => {
+            const reader = new FileReader();
+            reader.onload = () => socket.emit('private message', { from: myName, to: activeChat, image: reader.result });
+            reader.readAsDataURL(e.target.files[0]);
+        };
+
+        async function openCamera() {
+            if(!activeChat) return alert("Select a friend first!");
+            document.getElementById('camera-modal').style.display = 'flex';
+            stream = await navigator.mediaDevices.getUserMedia({ video: true });
+            document.getElementById('video').srcObject = stream;
+        }
+
+        function closeCamera() {
+            stream.getTracks().forEach(t => t.stop());
+            document.getElementById('camera-modal').style.display = 'none';
+        }
+
+        function takePhoto() {
+            const canvas = document.createElement('canvas');
+            canvas.width = 320; canvas.height = 240;
+            canvas.getContext('2d').drawImage(document.getElementById('video'), 0, 0, 320, 240);
+            socket.emit('private message', { from: myName, to: activeChat, image: canvas.toDataURL('image/png') });
+            closeCamera();
+        }
+
+        document.getElementById('chat-form').onsubmit = (e) => {
+            e.preventDefault();
+            const input = document.getElementById('input');
+            if(input.value && activeChat) {
+                socket.emit('private message', { from: myName, to: activeChat, text: input.value });
+                input.value = '';
+            }
+        };
+
+        socket.on('new message', (msg) => {
+            const currentRoom = [myName, activeChat].sort().join('_');
+            if (msg.room === currentRoom) addMsg(msg);
+        });
+
+        async function sendReq(targetName) {
+            await fetch('/api/send-request', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ targetName }) });
+            init();
+        }
+
+        async function acceptReq(requesterName) {
+            await fetch('/api/accept-request', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ requesterName }) });
+            init();
+        }
+
+        init();
+        setInterval(init, 5000);
+    </script>
+</body>
+</html>
