@@ -15,9 +15,9 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }));
 app.use(express.static('public'));
 app.use(session({ secret: 'charan-secret-key', resave: false, saveUninitialized: false }));
 
-const USERS_FILE = './users.json';
-const MSG_FILE = './messages.json';
-
+const USERS_FILE = './data/users.json';
+const MSG_FILE = './data/messages.json';
+if (!fs.existsSync('./data')) fs.mkdirSync('./data');
 if (!fs.existsSync(USERS_FILE)) fs.writeFileSync(USERS_FILE, JSON.stringify([]));
 if (!fs.existsSync(MSG_FILE)) fs.writeFileSync(MSG_FILE, JSON.stringify([]));
 
@@ -139,4 +139,6 @@ io.on('connection', (socket) => {
 });
 
 const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => console.log(`Charan Chat live on port ${PORT}`));
+server.listen(PORT, "0.0.0.0", () => {
+    console.log(`Charan Chat is live on port ${PORT}`);
+});

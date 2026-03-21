@@ -1,0 +1,18 @@
+[
+  {
+    "username": "x",
+    "password": "$2b$10$9zaGSrymlrHLAAFV.vJNzuC40b4e5ev9X3oO6PydMVcbHjedTfp62",
+    "friends": [
+      "y"
+    ],
+    "requests": []
+  },
+  {
+    "username": "y",
+    "password": "$2b$10$t8NqADMzeaYq1cy4Mupjk.lodJOyEwfEzbTfgg9ncfkKdnkhyXksi",
+    "friends": [
+      "x"
+    ],
+    "requests": []
+  }
+]
