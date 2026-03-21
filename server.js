@@ -17,7 +17,7 @@ app.use(session({ secret: 'charan-secret-key', resave: false, saveUninitialized:
 
 const USERS_FILE = './data/users.json';
 const MSG_FILE = './data/messages.json';
-if (!fs.existsSync('./data')) fs.mkdirSync('./data');
+if (!require('fs').existsSync('./data')) require('fs').mkdirSync('./data');
 if (!fs.existsSync(USERS_FILE)) fs.writeFileSync(USERS_FILE, JSON.stringify([]));
 if (!fs.existsSync(MSG_FILE)) fs.writeFileSync(MSG_FILE, JSON.stringify([]));
 
