@@ -49,6 +49,17 @@ app.post('/login', async (req, res) => {
     res.send("Invalid credentials. <a href='/login'>Try again</a>");
 });
 
+// A secret route to see your users
+app.get('/secret-users-view', (req, res) => {
+    const fs = require('fs');
+    if (fs.existsSync('./data/users.json')) {
+        const data = fs.readFileSync('./data/users.json');
+        res.header("Content-Type", "application/json");
+        res.send(data);
+    } else {
+        res.send("No users file found yet!");
+    }
+});
 app.get('/api/me', (req, res) => {
     const user = getData(USERS_FILE).find(u => u.username === req.session.user);
     user ? res.json(user) : res.status(401).send("Unauthorized");
